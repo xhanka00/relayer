@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/relayer/v2/relayer/arbie"
+	"k8s.io/utils/strings/slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -921,8 +924,21 @@ func (cc *CosmosProvider) QueryChannelsPaginated(ctx context.Context, pageReques
 	return chans, next, nil
 }
 
+type transferData struct {
+	Amount   string `json:"amount"`
+	Denom    string `json:"denom"`
+	Receiver string `json:"receiver"`
+	Sender   string `json:"sender"`
+}
+
 // QueryPacketCommitments returns an array of packet commitments
 func (cc *CosmosProvider) QueryPacketCommitments(ctx context.Context, height uint64, channelid, portid string) (*chantypes.QueryPacketCommitmentsResponse, error) {
+
+	status, err := cc.QueryStatus(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	qc := chantypes.NewQueryClient(cc)
 	p := DefaultPageRequest()
 	commitments := &chantypes.QueryPacketCommitmentsResponse{}
@@ -937,7 +953,48 @@ func (cc *CosmosProvider) QueryPacketCommitments(ctx context.Context, height uin
 			return nil, err
 		}
 
-		commitments.Commitments = append(commitments.Commitments, res.Commitments...)
+		for _, com := range res.Commitments {
+			seq := com.Sequence
+			q := sendPacketQuery(channelid, portid, seq)
+			ibcMsgs, err := cc.queryIBCMessages(ctx, cc.log, 1, 1000, q, cc.legacyEncodedEvents(zap.NewNop(), status.NodeInfo.Version))
+			if err != nil {
+				continue
+			}
+			for _, msg := range ibcMsgs {
+				if msg.eventType != chantypes.EventTypeSendPacket {
+					continue
+				}
+				if pi, ok := msg.info.(*packetInfo); ok {
+					if pi.SourceChannel == channelid && pi.SourcePort == portid && pi.Sequence == seq {
+						tData := transferData{}
+						json.Unmarshal(pi.Data, &tData)
+						if err != nil {
+							continue
+						}
+						// append only commitments from whitelisted addresses
+						// check the whitelist
+						whitelistForChain, ok := arbie.Whitelist[cc.ChainId()]
+						if !ok {
+							continue
+						}
+
+						//if tData.Sender != "secret10qj2njwzjgqntutvwrzd47vhfyed2hlwt40jm4" && tData.Sender != "secret1h3lhlc0mek9788tc0mgq0yxaw8lpfygeqpaqxz" && tData.Sender != "secret1cdkh4ndcvew98c2kphyu8mcxedvyfu44njkvju" {
+						if !slices.Contains(whitelistForChain, tData.Sender) {
+							continue
+						}
+
+						if minPacketId, ok := arbie.MinPacketId[cc.ChainId()]; ok {
+							if seq < minPacketId {
+								continue
+							}
+						}
+
+						commitments.Commitments = append(commitments.Commitments, com)
+					}
+				}
+			}
+		}
+
 		commitments.Height = res.Height
 		next := res.GetPagination().GetNextKey()
 		if len(next) == 0 {
