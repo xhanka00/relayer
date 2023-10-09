@@ -31,6 +31,7 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/strangelove-ventures/cometbft-client v0.1.0
 	github.com/stretchr/testify v1.9.0
+	github.com/pelletier/go-toml v1.9.5
 	github.com/tyler-smith/go-bip39 v1.1.0
 	go.uber.org/multierr v1.10.0
 	go.uber.org/zap v1.26.0
@@ -39,6 +40,7 @@ require (
 	google.golang.org/grpc v1.62.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
+	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 )
 
 require (
