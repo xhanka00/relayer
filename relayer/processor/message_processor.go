@@ -106,6 +106,9 @@ func (mp *messageProcessor) processMessages(
 		}
 	}
 
+	// arbie - do not periodically update client state
+	needsClientUpdate = false
+
 	mp.assembleMessages(ctx, messages, src, dst)
 
 	return mp.trackAndSendMessages(ctx, src, dst, needsClientUpdate)
