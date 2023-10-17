@@ -8,7 +8,7 @@ import (
 import toml "github.com/pelletier/go-toml"
 
 var MinPacketId = map[string]uint64{
-	"kaiyo-1": 2922,
+	//"kaiyo-1": 2922,
 }
 
 var chainMap = map[string]string{
