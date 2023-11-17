@@ -1,6 +1,7 @@
 package arbie
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -112,6 +113,7 @@ func GetAccoutWhitelist() map[string][]string {
 			if len(Whitelist[chainId]) == 0 {
 				Whitelist[chainId] = []string{}
 			}
+			fmt.Printf("Whitelisting %s\n", acct.(string))
 			Whitelist[chainId] = append(Whitelist[chainId], acct.(string))
 		}
 	}
