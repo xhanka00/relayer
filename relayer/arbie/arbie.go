@@ -55,6 +55,11 @@ var chainMap = map[string]string{
 	"TIA":     "celestia",
 	"SOMM":    "sommelier-3",
 	"DYDX":    "dydx-mainnet-1",
+	"PICA":    "centauri-1",
+	"NLS":    "pirin-1",
+	"ANDR":    "andromeda-1",
+	"FLIX": "omniflixhub-1",
+	"CHEQ":    "cheqd-mainnet-1",
 }
 
 var Whitelist map[string][]string
