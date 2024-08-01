@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"github.com/cosmos/relayer/v2/relayer/arbie"
 	"k8s.io/utils/strings/slices"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -953,11 +953,6 @@ type transferData struct {
 // QueryPacketCommitments returns an array of packet commitments
 func (cc *CosmosProvider) QueryPacketCommitments(ctx context.Context, height uint64, channelid, portid string) (*chantypes.QueryPacketCommitmentsResponse, error) {
 
-	status, err := cc.QueryStatus(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	qc := chantypes.NewQueryClient(cc)
 	p := DefaultPageRequest()
 	commitments := &chantypes.QueryPacketCommitmentsResponse{}
@@ -975,15 +970,15 @@ func (cc *CosmosProvider) QueryPacketCommitments(ctx context.Context, height uin
 		for _, com := range res.Commitments {
 			seq := com.Sequence
 			q := sendPacketQuery(channelid, portid, seq)
-			ibcMsgs, err := cc.queryIBCMessages(ctx, cc.log, 1, 1000, q, cc.legacyEncodedEvents(zap.NewNop(), status.NodeInfo.Version))
+			ibcMsgs, err := cc.queryIBCMessages(ctx, cc.log, 1, 1000, q)
 			if err != nil {
 				continue
 			}
 			for _, msg := range ibcMsgs {
-				if msg.eventType != chantypes.EventTypeSendPacket {
+				if msg.EventType != chantypes.EventTypeSendPacket {
 					continue
 				}
-				if pi, ok := msg.info.(*packetInfo); ok {
+				if pi, ok := msg.Info.(*chains.PacketInfo); ok {
 					if pi.SourceChannel == channelid && pi.SourcePort == portid && pi.Sequence == seq {
 						tData := transferData{}
 						json.Unmarshal(pi.Data, &tData)
