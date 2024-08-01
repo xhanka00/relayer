@@ -55,11 +55,20 @@ var chainMap = map[string]string{
 	"TIA":     "celestia",
 	"SOMM":    "sommelier-3",
 	"DYDX":    "dydx-mainnet-1",
+	"WORMHOLE": "wormchain",
 	"PICA":    "centauri-1",
 	"NLS":    "pirin-1",
 	"ANDR":    "andromeda-1",
 	"FLIX": "omniflixhub-1",
 	"CHEQ":    "cheqd-mainnet-1",
+	"DYM": "dymension_1100-1",
+	"CUDOS": "cudos-1",
+	"PLQ": "planq_7070-2",
+	"DEC": "mainnet-3",
+	"SAGA": "ssc-1",
+	"PASG": "passage-2",
+	"DVPN": "sentinelhub-2",
+	"CTK":"shentu-2.2",
 }
 
 var Whitelist map[string][]string
@@ -113,7 +122,7 @@ func GetAccoutWhitelist() map[string][]string {
 		for chain, acct := range acctsMap {
 			chainId, ok := chainMap[chain]
 			if !ok {
-				panic("chainId " + chainId + " not found")
+				panic("chainId for " + chain + " and account " + acct.(string) + " not found")
 			}
 			if len(Whitelist[chainId]) == 0 {
 				Whitelist[chainId] = []string{}
